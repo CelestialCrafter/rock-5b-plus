@@ -1,0 +1,3 @@
+sources/
+*.img
+rootfs/settings.json

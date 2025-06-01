@@ -1,0 +1,23 @@
+#!/sbin/openrc-run
+
+description="add extra packages and configs"
+
+depend() {
+	need localmount
+	want dev-settle
+	before networking
+}
+
+start() {
+	EXTRA="/mnt-extra"
+	mount $EXTRA
+
+	cp -r $EXTRA/etc/* /etc
+	apk add --cache-dir $EXTRA/cache --no-network $(cat $EXTRA/cache/packages)
+
+	rc-update add wpa_supplicant boot
+	rc-update add tailscale boot
+	rc-update add sshd default
+
+	umount $EXTRA
+}
