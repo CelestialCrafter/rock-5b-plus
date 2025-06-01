@@ -1,0 +1,61 @@
+
+/dts-v1/;
+
+/ {
+    description = "rock 5b plus fit";
+    #address-cells = <1>;
+
+    images {
+        kernel-1 {
+            description = "radxa kernel";
+            data = /incbin/("./vmlinux.bin.gz");
+            type = "kernel";
+            arch = "aarch64";
+            os = "linux";
+            compression = "gzip";
+            load = <0x00400000>;
+            entry = <0x00400000>;
+            hash-1 {
+                algo = "sha256";
+            };
+        };
+
+        ramdisk {
+            description = "modified alpine ramdisk";
+            data = /incbin/("./alpine-initramfs.cpio.gz");
+            type = "ramdisk";
+            arch = "aarch64";
+            os = "linux";
+            compression = "gzip";
+            load = <0x08300000>;
+            entry = <0x08300000>;
+            hash-1 {
+                algo = "sha256";
+            };
+        };
+
+        fdt {
+            description = "rock 5b plus dtb";
+            data = /incbin/("./rock-5b-plus.dtb");
+            type = "flat_dt";
+            arch = "arm64";
+            compression = "none";
+            load = <0x08300000>;
+            hash-1 {
+                algo = "sha256";
+            };
+        };
+
+    };
+
+    configurations {
+        default = "config";
+
+        config {
+            description = "rock 5b plus config";
+            kernel = "kernel";
+            ramdisk = "ramdisk";
+            fdt = "fdt";
+        };
+    };
+};
