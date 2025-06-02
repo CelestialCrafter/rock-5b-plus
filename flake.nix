@@ -4,13 +4,16 @@
     { nixpkgs, ... }:
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    in {
+    in
+    {
       devShells.x86_64-linux.default = pkgs.mkShell {
         packages = with pkgs; [
           parted
-		  apk-tools dpkg
-		  ubootTools dtc
-		  cutecom
+          apk-tools
+          dpkg
+          ubootTools
+          dtc
+          cutecom
         ];
       };
     };

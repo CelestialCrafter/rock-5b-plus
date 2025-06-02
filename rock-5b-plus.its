@@ -27,8 +27,7 @@
             arch = "aarch64";
             os = "linux";
             compression = "gzip";
-            load = <0x08300000>;
-            entry = <0x08300000>;
+            load = <0x0a200000>;
             hash-1 {
                 algo = "sha256";
             };

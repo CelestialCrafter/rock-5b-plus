@@ -18,10 +18,6 @@ cp $TMP/u-boot/usr/lib/u-boot/rock-5b-plus/u-boot.itb sources/unpacked/
 
 # kernel
 dpkg-deb -x sources/packed/kernel.deb $TMP/kernel
-cp -ra $TMP/kernel/boot/vmlinuz-* sources/unpacked/vmlinux.bin.gz
+gzip --decompress --stdout $TMP/kernel/boot/vmlinuz-* > sources/unpacked/Image
 cp -ra $TMP/kernel/usr/lib/linux-image-*/rockchip/rk3588-rock-5b-plus.dtb \
     sources/unpacked/rock-5b-plus.dtb
-
-# alpine
-mkdir -p sources/unpacked/alpine/
-tar -xzf sources/packed/alpine.tar.gz -C sources/unpacked/alpine/
