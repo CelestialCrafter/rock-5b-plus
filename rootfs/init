@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo initramfs loaded!
-rc-update add sshd
-
-echo starting /sbin/init
-exec /sbin/init

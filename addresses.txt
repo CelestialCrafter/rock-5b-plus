@@ -1,7 +1,0 @@
-0x08300000 dtb
-0x0a200000 ramdisk
-0x00400000 kernel
-
-console=ttyS0,1500000n8
-optional: rdinit=/sbin/init
-optional: root=/dev/ram0
