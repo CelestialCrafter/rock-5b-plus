@@ -1,9 +1,17 @@
 #!/bin/sh
-
 echo initramfs loaded!
 
-rc-update add add-extra sysinit
+# install extra configs/packages
+mount -t devtmpfs none /dev
+mount /mnt-extra
 
+cp -r /mnt-extra/* /
+apk add --cache-dir /mnt-extra/cache --no-network $(cat /mnt-extra/cache/packages)
+
+umount /mnt-extra
+umount /dev
+
+# add services to runlevels
 rc-update add mdevd sysinit
 rc-update add mdevd-init sysinit
 rc-update add hwdrivers sysinit
@@ -17,15 +25,20 @@ rc-update add sysctl boot
 rc-update add hostname boot
 rc-update add bootmisc boot
 rc-update add syslog boot
+rc-update add cgroups boot
+rc-update add wpa_supplicant boot
+rc-update add tailscale boot
+
+rc-update add sshd default
+rc-update add services default
+rc-update add media default
+rc-update add ntpd default
 
 rc-update add mount-ro shutdown
 rc-update add killprocs shutdown
 rc-update add savecache shutdown
 
-rc-update add ntpd default
-
 bbsuid --install
 
 echo starting busybox init
 exec /sbin/init
-

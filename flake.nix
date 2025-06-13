@@ -15,7 +15,7 @@
           dtc
           wpa_supplicant
           jq
-          mke2fs
+          shadow
           screen
           fish
         ];
