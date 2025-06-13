@@ -1,3 +1,0 @@
-/dev/disk/by-uuid/55d6cbfd-de6a-4ae3-a5e2-71b73abe3cbe /mnt-extra btrfs noauto,defaults,subvol=@extra 0 0
-/dev/disk/by-uuid/55d6cbfd-de6a-4ae3-a5e2-71b73abe3cbe /var/lib btrfs rw,defaults,subvol=@var-lib 0 2
-/dev/disk/by-uuid/55d6cbfd-de6a-4ae3-a5e2-71b73abe3cbe /home btrfs rw,defaults,subvol=@home 0 2

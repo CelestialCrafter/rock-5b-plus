@@ -1,0 +1,21 @@
+#!/sbin/openrc-run
+
+command="/usr/bin/podman"
+
+depend() {
+	need sysfs cgroups
+}
+
+start() {
+	${command} kube play /etc/containers/services.yaml
+	${command} pod start services
+}
+
+stop() {
+	${command} kube down /etc/containers/services.yaml
+}
+
+status() {
+	state=$(${command} pod inspect services --format "{{.State}}" | tr '[:upper:]' '[:lower:]')
+	einfo "status: $state"
+}
