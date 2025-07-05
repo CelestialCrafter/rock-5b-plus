@@ -1,6 +1,6 @@
 #!/sbin/openrc-run
 
-description="webdav/sftp/http server over rclone"
+description="http file server over rclone"
 command="/usr/bin/rclone"
 command_args="rcd --cache-dir /var/cache/rclone --rc-no-auth ~"
 command_user="media:media"
@@ -12,6 +12,6 @@ depend() {
 }
 
 start_post() {
-  ${command} rc serve/start type=http addr=:5000 fs=/var/lib/media/public
-  ${command} rc serve/start type=http addr=:5010 fs=/var/lib/media user=media pass=${password}
+  ${command} rc serve/start type=http addr=:5001 fs=/var/lib/media/public
+  ${command} rc serve/start type=http addr=:5000 fs=/var/lib/media
 }
