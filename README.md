@@ -4,23 +4,17 @@ alpine linux image for my radxa rock 5b+
 
 ## setup
 
-1. populate `config/settings.json` with the following schema:
-    ```
-    {
-    	"identifier": "machine id",
-        "media_password": "password for http password",
-    }
-    ```
-2. modify `config/root/etc/fstab`
-3. run `build.fish --mode u-boot --output u-boot.img`
+1. populate `config/identifier` with the machine identifier (blupies, order: scarameow, blahaj, bootao, pupy, beebub):
+2. modify `config/root/etc/fstab`, and populate it with the correct partition uuids
+3. run `build.fish --mode u-boot --output u-boot.img`, and flash it onto a sd card
 3. run `build.fish --mode extra --output <EXTRA_DIR>`
 4. run `build.fish --mode root --output <ROOT_DIR>` as root
-5. put the build artifacts onto the machine, and follow the post-install steps
+5. put EXTRA_DIR and ROOT_DIR the machine (inside the respective `/mnt-x` dirs from `config/root/etc/fstab`, boot the machine, and follow the post-install steps
 
 ## post-install
 
 1. create `/home/<identifier>` with mode `700`, and `<identifier>:<identifier>` as the owner
-2. create `/var/lib/media` with mode `700` and `media:media` as the owner
+2. create `/var/lib/media` and `/var/lib/media/public` with mode `777` and `media:media` as the owner
 3. generate `ed25519` and `rsa` keys at `/var/lib/ssh/ssh_host_<type>_key`
 4. run `tailscale login`
 
@@ -46,4 +40,4 @@ to add **packages**, add entries to the `cached` variable in the `build_extra` f
 > [!NOTE]
 > to add sub-packages with an install-if clause (ex. tailscale-openrc), ALL packages in the install-if clause must be added to the cache (openrc and tailscale, in tailscale-openrc's case)
 
-to add **configs**, add files to the `config/extra` directory, optionally editing the `build_extra` function if dynamic building is neccesary
+to add **configs**, add files to the `config/extra` directory, optionally editing the `build_extra` function if dynamic logic is neccesary
