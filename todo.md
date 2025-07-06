@@ -2,7 +2,6 @@
 
 setup mpd and doodle
 setup games
-encrypt and transfer irl files
 nftables deny all eth0 inbound
 
 ## post-localmount checkpath
