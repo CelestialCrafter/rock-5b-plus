@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+
+description="directory watch for media cache refresh"
+command="/bin/sh"
+command_args="-c 'inotifywait \
+	-mr --event create,delete,modify,move --f %w /var/lib/media | \
+	while read -r file; do rclone rc vfs/forget dir=\"$file\"; done'"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+	need media
+}

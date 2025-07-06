@@ -4,6 +4,8 @@ alpine linux image for my radxa rock 5b+
 
 ## setup
 
+<!-- @TODO document deployment scripts, and updated script syntax -->
+
 1. populate `config/identifier` with the machine identifier (blupies, order: scarameow, blahaj, bootao, pupy, beebub):
 2. modify `config/root/etc/fstab`, and populate it with the correct partition uuids
 3. run `build.fish --mode u-boot --output u-boot.img`, and flash it onto a sd card

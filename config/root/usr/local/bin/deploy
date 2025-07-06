@@ -1,0 +1,45 @@
+#!/bin/sh
+set -euo pipefail
+
+usage() {
+	echo "usage: deploy <extra,root> < artifact.tar.xz"
+	exit
+}
+
+case $1 in
+	"extra")
+		;;
+	"root")
+		;;
+	*)
+		usage
+esac
+
+TMP=$(mktemp)
+MNT=/mnt-$1
+
+echo "tmp artifact location: $TMP"
+echo "mount location: $MNT"
+echo "using mode: $1"
+
+cat > $TMP
+echo "saved artifact to tmp"
+
+# https://en.wikipedia.org/wiki/List_of_file_signatures
+if [ $(xxd -p -l 6 $TMP) != "fd377a585a00" ]; then
+	echo "artifact did not match xz magic numbers"
+	usage
+fi
+
+mount $MNT
+rm -rf $MNT/*
+echo "mounted and cleaned mnt"
+
+tar xf $TMP -C $MNT
+umount /mnt
+echo "unpacked artifact and unmounted mnt"
+
+mv $TMP /var/lib/deployments/$(date +extra.%F.%T.tar.xz)
+echo "moved artifact to archive"
+
+echo "success! reboot to apply build"
