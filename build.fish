@@ -1,7 +1,9 @@
 #!/usr/bin/env fish
 
-function setting -a key
-	jq -r $key config/settings.json
+function pack
+	set -l file artifacts/{$mode}.tar.xz
+	tar --xz -C $argv[1] -cf $file .
+	echo "packed into $file"
 end
 
 function apk_base
@@ -15,14 +17,16 @@ function make_rootfs -a output
 end
 
 function build_u_boot
-	fallocate -l 125MB $output
-	parted -s $output mklabel gpt
-	dd if=sources/unpacked/u-boot.itb of=$output seek=16384 conv=notrunc
+	set -l file artifacts/u-boot.img
+	fallocate -l 16M $file
+	parted -s $file mklabel gpt
+	dd if=sources/unpacked/u-boot.itb of=$file seek=16384 conv=notrunc
+	echo "written into $file"
 end
 
 function build_root
 	# base
-	set -l id (setting .identifier)
+	set -l id (cat config/identifier)
 	set -l tmp (mktemp --directory)
 	set -l rootfs $tmp/rootfs
 	mkdir $rootfs
@@ -32,8 +36,9 @@ function build_root
 	echo "ttyFIQ0::respawn:/sbin/getty -L 1500000 ttyFIQ0 vt100" >> $rootfs/etc/inittab
 	echo "celestial-homelab-$id" > $rootfs/etc/hostname
 
+	groupadd --prefix $rootfs deployers
 	useradd --prefix $rootfs --shell /bin/sh \
-		--user-group --groups wheel \
+		--user-group --groups wheel,deployers \
 		--password \
 		(mkpasswd -m sha512crypt $id) $id
 	useradd --prefix $rootfs --shell /sbin/nologin \
@@ -45,9 +50,11 @@ function build_root
 		alpine-base busybox-suid doas linux-firmware-rtw89 mdevd btrfs-progs
 
 	# finalize
-	cp sources/unpacked/rock-5b-plus.dtb $output
-	cp sources/unpacked/fan-control.dtbo $output
-	cp sources/unpacked/Image $output
+	mkdir $tmp/final
+
+	cp sources/unpacked/rock-5b-plus.dtb $tmp/final
+	cp sources/unpacked/fan-control.dtbo $tmp/final
+	cp sources/unpacked/Image $tmp/final
 	
 	cd $tmp/rootfs
 	find . \
@@ -59,43 +66,37 @@ function build_root
 		--architecture arm64 \
 		--type ramdisk \
 		--compression zstd \
-		--image $tmp/alpine-initramfs.cpio.zst $output/uInitrd
-	mkimage --architecture arm64 --type script --image config/boot.txt $output/boot.scr
+		--image $tmp/alpine-initramfs.cpio.zst $tmp/final/uInitrd
+	mkimage --architecture arm64 --type script --image config/boot.txt $tmp/final/boot.scr
 
+	pack $tmp/final
 	rm -rf $tmp
 end
 
 function build_extra
 	# base
 	set -l cached \
-		openrc util-linux openssh-server tailscale rclone podman nftables
-
-	cp -r config/extra/* $output
-	echo "password=\"$(setting .media_password)\"" > $output/etc/conf.d/media 
-
+		openrc util-linux openssh-server tailscale rclone podman nftables git
 	set -l tmp (mktemp --directory)
+
+	mkdir $tmp/output
+	cp -r config/extra/* $tmp/output
+
 	make_rootfs $tmp
 	mkdir $tmp/etc/apk/cache
 
 	apk_base $tmp update
 	apk_base $tmp --add-dependencies cache download $cached
+	echo "$cached" > $tmp/etc/apk/cache/packages
 
-	mv $tmp/etc/apk/cache $output
-	echo "$cached" > $output/cache/packages
+	mv $tmp/etc/apk/cache $tmp/output
+	pack $tmp/output
 	rm -rf $tmp
 end
 
-argparse 'm/mode=' 'o/output=' -- $argv
-or return
+set mode $argv[1]
 
-set output (path resolve $_flag_output)
-if test $_flag_mode != "u-boot"; and not test -e $output
-	test -e $output; and echo hi
-	echo "$output does not exist"
-	exit 1
-end
-
-switch $_flag_mode
+switch $mode
 case "root"
 	build_root
 case "extra"
