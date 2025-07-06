@@ -1,8 +1,8 @@
 #!/usr/bin/env fish
 
-function pack
+function pack -a dir
 	set -l file artifacts/{$mode}.tar.xz
-	tar --xz -C $argv[1] -cf $file .
+	tar --xz -C $dir -cf $file .
 	echo "packed into $file"
 end
 
@@ -24,7 +24,7 @@ function build_u_boot
 	echo "written into $file"
 end
 
-function build_root
+function build_root -a output
 	# base
 	set -l id (cat config/identifier)
 	set -l tmp (mktemp --directory)
@@ -50,11 +50,9 @@ function build_root
 		alpine-base busybox-suid doas linux-firmware-rtw89 mdevd btrfs-progs
 
 	# finalize
-	mkdir $tmp/final
-
-	cp sources/unpacked/rock-5b-plus.dtb $tmp/final
-	cp sources/unpacked/fan-control.dtbo $tmp/final
-	cp sources/unpacked/Image $tmp/final
+	cp sources/unpacked/rock-5b-plus.dtb $output
+	cp sources/unpacked/fan-control.dtbo $output
+	cp sources/unpacked/Image $output
 	
 	cd $tmp/rootfs
 	find . \
@@ -66,44 +64,45 @@ function build_root
 		--architecture arm64 \
 		--type ramdisk \
 		--compression zstd \
-		--image $tmp/alpine-initramfs.cpio.zst $tmp/final/uInitrd
-	mkimage --architecture arm64 --type script --image config/boot.txt $tmp/final/boot.scr
+		--image $tmp/alpine-initramfs.cpio.zst $output/uInitrd
+	mkimage --architecture arm64 --type script --image config/boot.txt $output/boot.scr
 
-	pack $tmp/final
 	rm -rf $tmp
 end
 
-function build_extra
-	# base
+function build_extra -a output
 	set -l cached \
-		openrc util-linux openssh-server tailscale rclone podman nftables git
+		openrc util-linux openssh-server tailscale rclone podman nftables git inotify-tools jq
 	set -l tmp (mktemp --directory)
 
-	mkdir $tmp/output
-	cp -r config/extra/* $tmp/output
+	cp -r config/extra/* $output
 
 	make_rootfs $tmp
 	mkdir $tmp/etc/apk/cache
-
 	apk_base $tmp update
 	apk_base $tmp --add-dependencies cache download $cached
 	echo "$cached" > $tmp/etc/apk/cache/packages
 
-	mv $tmp/etc/apk/cache $tmp/output
-	pack $tmp/output
+	mv $tmp/etc/apk/cache $output
 	rm -rf $tmp
 end
 
 set mode $argv[1]
 
 switch $mode
-case "root"
-	build_root
-case "extra"
-	build_extra
+case "main"
+	set -l output (mktemp --directory)
+	mkdir $output/root
+	mkdir $output/extra
+
+	build_root $output/root
+	mv $output/root/boot.scr $output
+	build_extra $output/extra
+
+	pack $output
 case "u-boot"
 	build_u_boot
 case '*'
-	echo "mode flag is not one of \"extra\", \"root\", or \"u-boot\""
+	echo "mode flag is not one of \"main\" or \"u-boot\""
 	exit 1
 end

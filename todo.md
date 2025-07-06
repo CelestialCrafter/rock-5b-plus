@@ -1,9 +1,9 @@
 # todo
 
-setup mpd and doodle
-setup games
-encrypt and transfer irl files
-nftables deny all eth0 inbound
+- setup mpd and doodle
+- setup games
+- nftables deny all eth0 inbound
+- boot off usb backup initrd if plugged in
 
 ## post-localmount checkpath
 

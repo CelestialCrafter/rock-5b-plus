@@ -3,12 +3,13 @@ echo initramfs loaded!
 
 # install extra configs/packages
 mount -t devtmpfs none /dev
-mount /mnt-extra
+mount /mnt-deploy
 
-cp -r /mnt-extra/* /
-apk add --cache-dir /mnt-extra/cache --no-network $(cat /mnt-extra/cache/packages)
+cp -r /mnt-deploy/extra/* /
+CACHE=/mnt-deploy/extra/cache
+apk add --cache-dir $CACHE --no-network $(cat $CACHE/packages)
 
-umount /mnt-extra
+umount /mnt-deploy
 umount /dev
 
 # add services to runlevels
@@ -26,13 +27,13 @@ rc-update add hostname boot
 rc-update add bootmisc boot
 rc-update add syslog boot
 rc-update add cgroups boot
-rc-update add wpa_supplicant boot
 rc-update add tailscale boot
 
 rc-update add sshd default
-rc-update add services default
-rc-update add media default
 rc-update add ntpd default
+rc-update add media default
+rc-update add media-refresh default
+rc-update add services default
 
 rc-update add mount-ro shutdown
 rc-update add killprocs shutdown

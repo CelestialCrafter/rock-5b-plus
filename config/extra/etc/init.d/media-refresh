@@ -1,13 +1,32 @@
 #!/sbin/openrc-run
 
 description="directory watch for media cache refresh"
-command="/bin/sh"
-command_args="-c 'inotifywait \
-	-mr --event create,delete,modify,move --f %w /var/lib/media | \
-	while read -r file; do rclone rc vfs/forget dir=\"$file\"; done'"
+command="rc-service"
+command_args="media-refresh watch"
 command_background=true
 pidfile="/run/${RC_SVCNAME}.pid"
+extra_commands="watch refresh"
 
 depend() {
 	need media
+}
+
+refresh() {
+	if [ -n "$1" ]; then
+		echo "no directory specified"
+		exit 1
+	fi
+
+	rclone rc serve/list | jq -r '.list.[].id' | \
+		while read -r id; do
+			rclone rc vfs/forget dir="$1"
+		done
+}
+
+watch() {
+	inotifywait -mr --event create,delete,modify,move \
+		--format %w /var/lib/media | \
+		while read -r file; do
+			rc-service media-refresh refresh "$file"
+		done
 }

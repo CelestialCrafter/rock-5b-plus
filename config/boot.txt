@@ -1,14 +1,14 @@
-setenv bootargs console=ttyS0,1500000n8 rootflags=size=1G
+setenv bootargs console=tty1 console=ttyS0,1500000n8 rootflags=size=1G
 
 setenv kernel_addr 0x00400000
 setenv fdt_addr 0x08300000
 setenv fdto_addr 0x083c0000
 setenv ramdisk_addr 0x0a200000
 
-ext4load nvme 0:1 ${kernel_addr} /Image
-ext4load nvme 0:1 ${fdt_addr} /rock-5b-plus.dtb
-ext4load nvme 0:1 ${fdto_addr} /fan-control.dtbo
-ext4load nvme 0:1 ${ramdisk_addr} /uInitrd
+ext4load nvme 0:1 ${kernel_addr} /root/Image
+ext4load nvme 0:1 ${fdt_addr} /root/rock-5b-plus.dtb
+ext4load nvme 0:1 ${fdto_addr} /root/fan-control.dtbo
+ext4load nvme 0:1 ${ramdisk_addr} /root/uInitrd
 
 fdt addr ${fdt_addr}
 fdt resize 512
