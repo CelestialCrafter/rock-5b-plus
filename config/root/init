@@ -41,5 +41,8 @@ rc-update add savecache shutdown
 
 bbsuid --install
 
-echo starting busybox init
+echo dropping you into a shell
 exec /sbin/init
+
+# echo starting busybox init
+# exec /sbin/init

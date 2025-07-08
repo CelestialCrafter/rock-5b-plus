@@ -18,6 +18,7 @@
           shadow
           screen
           fish
+		  p7zip
         ];
       };
     };

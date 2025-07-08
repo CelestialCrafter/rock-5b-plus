@@ -1,4 +1,4 @@
-setenv bootargs console=tty1 console=ttyS0,1500000n8 rootflags=size=1G
+setenv bootargs console=tty1 console=tty2 console=ttyS0,1500000n8 rootflags=size=1G
 
 setenv kernel_addr 0x00400000
 setenv fdt_addr 0x08300000
