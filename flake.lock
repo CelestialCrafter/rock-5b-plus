@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "collabora-u-boot": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1751935365,
+        "narHash": "sha256-VeEoC+kz0Dp+/wAIvRrqMfdGnBg7Rb0mByzOt8mp8Zk=",
+        "ref": "refs/heads/rockchip",
+        "rev": "eaadfde0c6a8975c85d9da9e19a5af70795cd1c6",
+        "revCount": 100033,
+        "type": "git",
+        "url": "https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1748460289,
@@ -18,6 +34,7 @@
     },
     "root": {
       "inputs": {
+        "collabora-u-boot": "collabora-u-boot",
         "nixpkgs": "nixpkgs"
       }
     }

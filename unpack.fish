@@ -1,32 +1,29 @@
 #!/usr/bin/env fish
 
+# vars
+set alpine "https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/aarch64/alpine-minirootfs-3.22.0-aarch64.tar.gz"
+set armbian "https://armbian.chi.auroradev.org/dl/rock-5b-plus/archive/Armbian_25.5.1_Rock-5b-plus_bookworm_edge_6.14.6_minimal.img.xz"
+
 # setup
 set tmp (mktemp --directory)
-echo "unpacking tmp dir: $tmp"
-mkdir -p sources/unpacked
-
-function cleanup
-	losetup --detach-all
-	umount $tmp/mnt
-    rm -rf $tmp
-end
-
+function cleanup; rm -rf $tmp; end
 trap cleanup EXIT
 
+mkdir -p sources/unpacked
+
 # u-boot
-dpkg-deb -x sources/packed/u-boot.deb $tmp/u-boot
+dpkg-deb -x sources/u-boot.deb $tmp/u-boot
 cp $tmp/u-boot/usr/lib/u-boot/rock-5b-plus/u-boot.itb sources/unpacked
 
 # kernel
-mkdir $tmp/mnt
-set loop (losetup --find --partscan --show sources/packed/armbian.img)
-mount {$loop}p1 $tmp/mnt
+curl $armbian | xz --decompress > $tmp/armbian.img
+scripts/extract.fish --image $tmp/armbian.img --offset 32768 --output $tmp --regex \
+	'^(/boot/dtb-.*/rockchip/rk3588-rock-5b-plus.dtb)|(boot/vmlinuz-.*?)|(/usr/lib/modules)'
 
-cp $tmp/mnt/boot/Image sources/unpacked/Image
-cp $tmp/mnt/boot/dtb/rockchip/rk3588-radxa-rock-5b+.dtb sources/unpacked/rock-5b-plus.dtb
-cp -r $tmp/mnt/lib/modules sources/unpacked
-dtc -@ -I dts -O dtb -o sources/unpacked/fan-control.dtbo sources/packed/fan-control.dtso
+mv $tmp/usr/lib/modules sources/unpacked
+mv $tmp/boot/dtb-*/rockchip/rk3588-radxa-rock-5b-plus.dtb sources/unpacked/rock-5b-plus.dtb
+mv $tmp/boot/vmlinuz-* sources/unpacked/Image
 
 # alpine
 mkdir -p sources/unpacked/alpine
-tar -xzf sources/packed/alpine.tar.gz -C sources/unpacked/alpine
+curl $alpine | tar -xz -C sources/unpacked/alpine

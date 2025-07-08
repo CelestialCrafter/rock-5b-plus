@@ -33,7 +33,6 @@ function build_root -a output
 
 	make_rootfs $rootfs
 	cp -r config/root/* $rootfs
-	echo "ttyFIQ0::respawn:/sbin/getty -L 1500000 ttyFIQ0 vt100" >> $rootfs/etc/inittab
 	echo "celestial-homelab-$id" > $rootfs/etc/hostname
 
 	groupadd --prefix $rootfs deployers
@@ -50,8 +49,8 @@ function build_root -a output
 		alpine-base busybox-suid doas linux-firmware-rtw89 mdevd btrfs-progs
 
 	# finalize
+	dtc -@ -I dts -O dtb -o $output/fan-control.dtbo config/fan-control.dtso
 	cp sources/unpacked/rock-5b-plus.dtb $output
-	cp sources/unpacked/fan-control.dtbo $output
 	cp sources/unpacked/Image $output
 	
 	cd $tmp/rootfs
@@ -87,7 +86,13 @@ function build_extra -a output
 	rm -rf $tmp
 end
 
+if test (id -u) -ne 0
+	echo "effective uid is not 0, please run as root"
+	exit 1
+end
+
 set mode $argv[1]
+mkdir -p artifacts
 
 switch $mode
 case "main"
@@ -96,8 +101,8 @@ case "main"
 	mkdir $output/extra
 
 	build_root $output/root
-	mv $output/root/boot.scr $output
 	build_extra $output/extra
+	mv $output/root/boot.scr $output
 
 	pack $output
 case "u-boot"
