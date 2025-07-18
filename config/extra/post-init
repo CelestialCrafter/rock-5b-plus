@@ -1,0 +1,43 @@
+#!/bin/sh
+echo running extra post-init
+
+rc-update add mdevd sysinit
+rc-update add mdevd-init sysinit
+rc-update add tailscale boot
+rc-update add sshd default
+rc-update add ntpd default
+rc-update add media default
+rc-update add media-refresh default
+rc-update add services default
+
+rc-update add hwdrivers sysinit
+
+rc-update add devfs sysinit
+rc-update add dmesg sysinit
+
+rc-update add hwclock boot
+rc-update add modules boot
+rc-update add sysctl boot
+rc-update add hostname boot
+rc-update add bootmisc boot
+rc-update add syslog boot
+rc-update add cgroups boot
+
+rc-update add mount-ro shutdown
+rc-update add killprocs shutdown
+rc-update add savecache shutdown
+
+bbsuid --install
+
+id=$(cat /etc/identifier)
+
+addgroup deployers
+adduser -s /bin/sh -G wheel,deployers
+chpasswd $id:$id
+
+adduser -H -h /var/lib/media -s /sbin/nologin media
+
+echo "celestial-homelab-$id" > /etc/hostname
+
+echo running busybox init
+exec /sbin/init

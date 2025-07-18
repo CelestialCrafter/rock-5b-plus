@@ -1,17 +1,36 @@
 {
   "nodes": {
+    "collabora-linux": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1749200861,
+        "narHash": "sha256-glQnVDzLW1yRDXl98LdXUjQ+hAri+zP+ll1QrWqQDeQ=",
+        "ref": "refs/heads/rockchip-release",
+        "rev": "33755850faeb0e53e634390d147cc261a60d2898",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gitlab.collabora.com/hardware-enablement/rockchip-3588/linux.git"
+      },
+      "original": {
+        "shallow": true,
+        "type": "git",
+        "url": "https://gitlab.collabora.com/hardware-enablement/rockchip-3588/linux.git"
+      }
+    },
     "collabora-u-boot": {
       "flake": false,
       "locked": {
-        "lastModified": 1751935365,
-        "narHash": "sha256-VeEoC+kz0Dp+/wAIvRrqMfdGnBg7Rb0mByzOt8mp8Zk=",
-        "ref": "refs/heads/rockchip",
-        "rev": "eaadfde0c6a8975c85d9da9e19a5af70795cd1c6",
-        "revCount": 100033,
+        "lastModified": 1744217359,
+        "narHash": "sha256-QmIsIhHrLGL33sgUqiXCyfWjWL25lGHYivtgJAMvsag=",
+        "ref": "rk3588",
+        "rev": "cbc9673f77851953e294845549d418ffe2190ef9",
+        "shallow": true,
         "type": "git",
         "url": "https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git"
       },
       "original": {
+        "ref": "rk3588",
+        "shallow": true,
         "type": "git",
         "url": "https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git"
       }
@@ -34,6 +53,7 @@
     },
     "root": {
       "inputs": {
+        "collabora-linux": "collabora-linux",
         "collabora-u-boot": "collabora-u-boot",
         "nixpkgs": "nixpkgs"
       }

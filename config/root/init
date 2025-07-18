@@ -1,48 +1,15 @@
 #!/bin/sh
-echo initramfs loaded!
+echo installing extra
 
-# install extra configs/packages
 mount -t devtmpfs none /dev
 mount /mnt-deploy
 
-cp -r /mnt-deploy/extra/* /
+cp -r /mnt-deploy/extra/files/* /
 CACHE=/mnt-deploy/extra/cache
-apk add --cache-dir $CACHE --no-network $(cat $CACHE/packages)
+apk add --cache-dir $CACHE --no-network $(cat $CACHE/installed)
 
 umount /mnt-deploy
 umount /dev
 
-# add services to runlevels
-rc-update add mdevd sysinit
-rc-update add mdevd-init sysinit
-rc-update add hwdrivers sysinit
+/post-init
 
-rc-update add devfs sysinit
-rc-update add dmesg sysinit
-
-rc-update add hwclock boot
-rc-update add modules boot
-rc-update add sysctl boot
-rc-update add hostname boot
-rc-update add bootmisc boot
-rc-update add syslog boot
-rc-update add cgroups boot
-rc-update add tailscale boot
-
-rc-update add sshd default
-rc-update add ntpd default
-rc-update add media default
-rc-update add media-refresh default
-rc-update add services default
-
-rc-update add mount-ro shutdown
-rc-update add killprocs shutdown
-rc-update add savecache shutdown
-
-bbsuid --install
-
-echo dropping you into a shell
-exec /sbin/init
-
-# echo starting busybox init
-# exec /sbin/init
