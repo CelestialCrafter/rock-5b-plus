@@ -3,7 +3,7 @@
 - setup mpd and doodle
 - setup games
 - nftables deny all eth0 inbound
-- boot off usb backup initrd if plugged in
+- add swap memory
 
 ## post-localmount checkpath
 
