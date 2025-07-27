@@ -4,13 +4,18 @@
 			"action": "accept",
 			"src":    ["CelestialCrafter@github"],
 			"dst": [
+				"CelestialCrafter@github:*",
+				"autogroup:internet:*",
 				"homelab-scarameow:5000",
 				"homelab-scarameow:9000",
 				"homelab-scarameow:22",
-				"CelestialCrafter@github:*",
-				"autogroup:internet:*",
-				"tunnel:22"
-			]
+				"tunnel:22",
+			],
+		},
+		{
+			"action": "accept",
+			"src":    ["tntgav@gmail.com"],
+			"dst":    ["tntgav@gmail.com:*"],
 		},
 		{
 			"action": "accept",
@@ -19,16 +24,19 @@
 				"homelab-scarameow:80",
 				"homelab-scarameow:5001",
 				"homelab-scarameow:25565",
-				"pc-windows:25565"
-			]
-		}
+				"lily-nvidia:3000",
+				"pc-windows:25565",
+			],
+		},
 	],
 	"tagOwners": {
-		"tag:isolated": []
+		"tag:isolated": [],
 	},
 	"hosts": {
 		"tunnel":            "100.64.0.0",
 		"homelab-scarameow": "100.64.0.1",
-		"pc-windows":        "100.64.0.3"
-	}
+		"pc-windows":        "100.64.0.3",
+		"pc-linux":          "100.64.0.2",
+		"lily-nvidia":       "100.64.2.0",
+	},
 }
