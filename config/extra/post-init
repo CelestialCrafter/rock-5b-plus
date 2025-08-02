@@ -21,8 +21,6 @@ rc-update add tailscale boot
 
 rc-update add sshd default
 rc-update add ntpd default
-rc-update add media default
-rc-update add media-refresh default
 rc-update add services default
 
 rc-update add mount-ro shutdown
