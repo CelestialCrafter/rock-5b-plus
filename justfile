@@ -2,7 +2,7 @@
 
 apk_base := "apk --arch aarch64 --root"
 extra_pkgs := "busybox-openrc busybox-suid btrfs-progs musl-utils openrc mdevd doas util-linux \
-openssh-server tailscale rclone podman nftables git"
+openssh-server tailscale rclone git"
 
 set script-interpreter := ["sh", "-euo", "pipefail"]
 set unstable
