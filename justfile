@@ -1,9 +1,8 @@
 #!/usr/bin/env just --justfile
 
 apk_base := "apk --arch aarch64 --root"
-extra_pkgs := "openrc mdevd busybox-suid doas util-linux \
-openssh-server tailscale rclone podman nftables \
-git inotify-tools jq"
+extra_pkgs := "busybox-openrc busybox-suid btrfs-progs musl-utils openrc mdevd doas util-linux \
+openssh-server tailscale rclone podman nftables git"
 
 set script-interpreter := ["sh", "-euo", "pipefail"]
 set unstable
@@ -11,10 +10,10 @@ set unstable
 # utils
 
 # internal - do not run manually
+# creates alpine rootfs
 [script]
 alpine output:
     mkdir -p sources
-    mkdir -p {{output}}
 
     if [ ! -e sources/alpine.tar.gz ]; then
         base="https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/aarch64"
@@ -27,22 +26,36 @@ alpine output:
     sed -i 's/v[0-9]\+\.[0-9]\+/edge/' {{output}}/etc/apk/repositories
 
 # internal - do not run manually
+# builds nix source if needed
 [script]
-nix-build package:
+nix-build package arch:
     mkdir -p sources
     if [ ! -e sources/{{package}} ]; then
-        nix build .#packages.aarch64-linux.{{package}} --out-link sources/{{package}}
+        nix build .#packages.{{arch}}-linux.{{package}} --out-link sources/{{package}}
     fi
 
-# intermediates
-
 # internal - do not run manually
+# creates an archives inside artifacts/, and updates the current archive symlink
 [script]
-extra output identifier:
+pack directory name:
+    file={{name}}-$(date +%F_%H-%M-%S).tar.zst
+
+    cd artifacts
+    tar --zstd -C {{directory}} -cf $file .
+    sha256sum $file > $file.sha256
+    ln -sf $file {{name}}-current.tar.zst
+    ln -sf $file.sha256 {{name}}-current.tar.zst.sha256
+
+# outputs
+
+# builds configs and package caches
+[script]
+extra identifier:
     # setup
-    mkdir -p {{output}}
     tmp=$(mktemp --directory)
     rootfs=$tmp/rootfs
+    output=$tmp/output
+    mkdir $rootfs $output
     trap "rm -rf $tmp" EXIT
 
     # rootfs
@@ -51,21 +64,29 @@ extra output identifier:
 
     {{apk_base}} $rootfs update
     {{apk_base}} $rootfs --add-dependencies cache download {{extra_pkgs}}
-    echo "{{extra_pkgs}}" > $rootfs/etc/apk/cache/installed
+    echo {{extra_pkgs}} > $rootfs/etc/apk/cache/installed
 
-    # outputs
-    mv $rootfs/etc/apk/cache {{output}}/cache
-    cp -r config/extra {{output}}/files
-    echo "{{identifier}}" > {{output}}/files/identifier
+    useradd --prefix $rootfs --shell /bin/sh \
+        --user-group --groups users,wheel \
+        --password $(mkpasswd -m sha512crypt {{identifier}}) {{identifier}}
 
-# internal - do not run manually
+    # output
+    mv $rootfs/etc/apk/cache $output/cache
+    cp -r config/extra $output/files
+    echo {{identifier}} > $output/files/etc/identifier
+
+    just pack $output extra
+
+# builds kernel, initramfs, ect
 [script]
-root output:
-    just nix-build linux
+base:
+    just nix-build linux aarch64
 
     # setup
-    mkdir -p {{output}}
     tmp=$(mktemp --directory)
+    rootfs=$tmp/rootfs
+    output=$tmp/output
+    mkdir $rootfs $output
     trap "chmod -R 755 $tmp && rm -rf $tmp" EXIT
 
     # rootfs
@@ -74,30 +95,26 @@ root output:
     cp -r config/root/* $rootfs
     cp -r sources/linux/lib/* $rootfs/lib
 
-    useradd --prefix $rootfs --shell /bin/sh \
-    	--user-group --groups wheel,deployers \
-    	--password (mkpasswd -m sha512crypt $id) $id
-    
-    # outputs
-    cp sources/linux/Image {{output}}
-    cp sources/linux/dtbs/rockchip/rk3588-rock-5b-plus.dtb {{output}}/rock-5b-plus.dtb
+    # output
+    cp sources/linux/Image $output
+    cp sources/linux/dtbs/rockchip/rk3588-rock-5b-plus.dtb $output/rock-5b-plus.dtb
+    mkimage --architecture arm64 --type script --image config/boot.txt $output/boot.scr
 
-    (cd $tmp && find . | cpio --create --format newc | zstd) > \
-        $tmp/alpine-initramfs.cpio.zst
-
+    (cd $rootfs && find . | cpio --create --format newc | zstd) > \
+        $tmp/initramfs.cpio.zst
     mkimage \
         --architecture arm64 \
         --type ramdisk \
         --compression zstd \
-        --image $tmp/alpine-initramfs.cpio.zst {{output}}/uInitrd
+        --image $tmp/initramfs.cpio.zst $output/uInitrd
 
-# outputs
+    just pack $output base
 
 # flashes the device, follow link in README.md before using this
 [script]
 flash:
-    just nix-build u-boot
-    just nix-build spl-loader
+    just nix-build u-boot $(uname -m)
+    just nix-build spl-loader $(uname -m)
 
     if [ $(id -u) -ne 0 ]; then
         echo "effective user id is not 0, please run this as root!"
@@ -107,17 +124,3 @@ flash:
     rkdeveloptool db sources/spl-loader
     rkdeveloptool wl 0 sources/u-boot/u-boot-rockchip-spi.bin
     rkdeveloptool rd
-
-# creates build.tar.xz in the cwd
-[script]
-[no-cd]
-build identifier:
-    tmp=$(mktemp --directory)
-    trap "rm -rf $tmp" EXIT
-
-    just extra $tmp/extra {{identifier}}
-    just root $tmp/root
-
-    mkimage --architecture arm64 --type script --image config/boot.txt $tmp/boot.scr
-
-    tar --zstd -C $tmp -cf build.tar.zst
